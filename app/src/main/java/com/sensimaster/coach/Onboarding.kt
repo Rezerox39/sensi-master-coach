@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
 
 data class SetupResult(
+    val motivations: List<Motivation>,
     val playStyle: PlayStyle,
     val experience: Experience,
     val controlStyle: ControlStyle,
@@ -48,9 +49,10 @@ fun SetupWizard(device: DeviceSnapshot, detectedRefresh: Int, onDone: (SetupResu
     var experience by remember { mutableStateOf(Experience.Intermediate) }
     var controlStyle by remember { mutableStateOf(ControlStyle.ThreeFinger) }
     var dpi by remember { mutableIntStateOf(420) }
-    val lastStep = 5
+    var motivations by remember { mutableStateOf(setOf(Motivation.ImproveAim, Motivation.SmoothTracking)) }
+    val lastStep = 6
 
-    Box(modifier = Modifier.fillMaxSize().background(SensisBg)) {
+    Box(modifier = Modifier.fillMaxSize().background(AppBg)) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -75,7 +77,7 @@ fun SetupWizard(device: DeviceSnapshot, detectedRefresh: Int, onDone: (SetupResu
                     )
                     Text(
                         "A few quick choices - you tune everything later in calibration.",
-                        color = SensisMuted,
+                        color = AppMuted,
                         style = MaterialTheme.typography.bodyLarge,
                         textAlign = TextAlign.Center
                     )
@@ -86,10 +88,13 @@ fun SetupWizard(device: DeviceSnapshot, detectedRefresh: Int, onDone: (SetupResu
                 WizardProgress(step, lastStep)
                 when (step) {
                     1 -> DeviceAndDpiStep(device, detectedRefresh, dpi, { dpi = it })
-                    2 -> ChoiceRow("Play style", PlayStyle.entries, playStyle, { playStyle = it }, PlayStyle::label)
-                    3 -> ChoiceRow("Experience", Experience.entries, experience, { experience = it }, Experience::label)
-                    4 -> ChoiceRow("Control style", ControlStyle.entries, controlStyle, { controlStyle = it }, ControlStyle::label)
-                    5 -> SummaryStep(playStyle, experience, controlStyle, dpi, detectedRefresh)
+                    2 -> MotivationsStep(motivations) {
+                        motivations = if (it in motivations) motivations - it else motivations + it
+                    }
+                    3 -> ChoiceRow("Play style", PlayStyle.entries, playStyle, { playStyle = it }, PlayStyle::label)
+                    4 -> ChoiceRow("Experience", Experience.entries, experience, { experience = it }, Experience::label)
+                    5 -> ChoiceRow("Control style", ControlStyle.entries, controlStyle, { controlStyle = it }, ControlStyle::label)
+                    6 -> SummaryStep(motivations, playStyle, experience, controlStyle, dpi, detectedRefresh)
                 }
                 Spacer(Modifier.height(26.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -103,7 +108,7 @@ fun SetupWizard(device: DeviceSnapshot, detectedRefresh: Int, onDone: (SetupResu
                             "Create my setup",
                             modifier = Modifier.weight(1f)
                         ) {
-                            onDone(SetupResult(playStyle, experience, controlStyle, dpi, detectedRefresh))
+                            onDone(SetupResult(motivations.toList(), playStyle, experience, controlStyle, dpi, detectedRefresh))
                         }
                     }
                 }
@@ -124,8 +129,8 @@ private fun WizardProgress(step: Int, lastStep: Int) {
         LinearProgressIndicator(
             progress = { fraction },
             modifier = Modifier.fillMaxWidth().height(5.dp),
-            color = SensisAccent,
-            trackColor = SensisSurfaceHigh
+            color = AppAccent,
+            trackColor = AppSurfaceHigh
         )
     }
 }
@@ -142,15 +147,15 @@ private fun DeviceAndDpiStep(
         CardShell {
             Text("${device.manufacturer} ${device.model}", color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
             Spacer(Modifier.height(4.dp))
-            Text("Android ${device.androidVersion}  |  ~$detectedRefresh Hz display", color = SensisMuted)
+            Text("Android ${device.androidVersion}  |  ~$detectedRefresh Hz display", color = AppMuted)
         }
         SectionHeader("Screen DPI")
         CardShell {
-            Text("The display density the game uses. Know your value before applying presets.", color = SensisMuted, style = MaterialTheme.typography.bodySmall)
+            Text("The display density the game uses. Know your value before applying presets.", color = AppMuted, style = MaterialTheme.typography.bodySmall)
             Spacer(Modifier.height(14.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Text("DPI", color = Color.White, fontWeight = FontWeight.Bold)
-                Text("$dpi", color = SensisAccent, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
+                Text("$dpi", color = AppAccent, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
             }
             Slider(
                 value = dpi.toFloat(),
@@ -159,9 +164,9 @@ private fun DeviceAndDpiStep(
                 steps = 63
             )
             Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                Text("320", color = SensisMuted, style = MaterialTheme.typography.labelSmall)
-                Text("480", color = SensisMuted, style = MaterialTheme.typography.labelSmall)
-                Text("640", color = SensisMuted, style = MaterialTheme.typography.labelSmall)
+                Text("320", color = AppMuted, style = MaterialTheme.typography.labelSmall)
+                Text("480", color = AppMuted, style = MaterialTheme.typography.labelSmall)
+                Text("640", color = AppMuted, style = MaterialTheme.typography.labelSmall)
             }
         }
         InfoCard(
@@ -172,7 +177,28 @@ private fun DeviceAndDpiStep(
 }
 
 @Composable
+@Composable
+private fun MotivationsStep(selected: Set<Motivation>, onToggle: (Motivation) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        SectionHeader("Your goals")
+        Text("Pick everything that matters. The generator keeps these in mind when it explains choices.", color = AppMuted)
+        Motivation.entries.forEach { motivation ->
+            TagChip(
+                motivation.label,
+                active = motivation in selected,
+                onClick = { onToggle(motivation) },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+        if (selected.isEmpty()) {
+            InfoCard("No goals selected", "Pick at least one so the coach can focus its advice.")
+        }
+    }
+}
+
+@Composable
 private fun SummaryStep(
+    motivations: List<Motivation>,
     playStyle: PlayStyle,
     experience: Experience,
     controlStyle: ControlStyle,
@@ -181,6 +207,14 @@ private fun SummaryStep(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         SectionHeader("Review your setup")
+        CardShell {
+            Text("Goals", color = AppMuted, style = MaterialTheme.typography.labelMedium)
+            Text(
+                motivations.joinToString(" · ") { it.label }.ifEmpty { "None" },
+                color = Color.White,
+                fontWeight = FontWeight.Bold
+            )
+        }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             ValueChip("Style", playStyle.label, Modifier.weight(1f))
             ValueChip("Fingers", controlStyle.label, Modifier.weight(1f))
@@ -190,12 +224,12 @@ private fun SummaryStep(
             ValueChip("Refresh", "~$refreshRate Hz", Modifier.weight(1f))
         }
         CardShell {
-            Text("DPI", color = SensisMuted, style = MaterialTheme.typography.labelMedium)
-            Text("$dpi", color = SensisAccent, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
+            Text("DPI", color = AppMuted, style = MaterialTheme.typography.labelMedium)
+            Text("$dpi", color = AppAccent, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
             Spacer(Modifier.height(6.dp))
             Text(
                 "The generator turns these choices into testable starting values. Calibration tunes one value at a time.",
-                color = SensisMuted,
+                color = AppMuted,
                 style = MaterialTheme.typography.bodySmall
             )
         }

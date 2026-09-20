@@ -90,8 +90,8 @@ fun MascotFace(expression: String, modifier: Modifier = Modifier) {
         targetValue = when (expression) {
             "success", "happy", "excited" -> SignalGreen
             "concerned", "warning", "confused" -> SignalAmber
-            "offline", "sleeping" -> SensisMuted
-            else -> SensisAccent
+            "offline", "sleeping" -> AppMuted
+            else -> AppAccent
         },
         label = "glow"
     )
@@ -103,75 +103,39 @@ fun MascotFace(expression: String, modifier: Modifier = Modifier) {
     )
 
     Canvas(modifier = modifier) {
-        val side = size.minDimension * 0.86f
-        val left = (size.width - side) / 2f
-        val top = (size.height - side) / 2f
+        val side = size.minDimension * 0.90f
+        val center = center
 
-        // Soft outer halo.
+        // Soft expression halo.
         drawCircle(
-            color = glow.copy(alpha = 0.14f),
-            radius = side * 0.62f,
+            color = glow.copy(alpha = 0.18f),
+            radius = side * 0.60f,
             center = center
         )
 
-        // Single smooth blob body.
-        val body = Path().apply {
-            moveTo(left + side * 0.5f, top)
-            cubicTo(left + side * 1.04f, top + side * 0.14f, left + side * 1.04f, top + side * 0.86f, left + side * 0.5f, top + side)
-            cubicTo(left - side * 0.04f, top + side * 0.86f, left - side * 0.04f, top + side * 0.14f, left + side * 0.5f, top)
-            close()
-        }
-        drawPath(
-            path = body,
-            brush = Brush.verticalGradient(
-                colors = listOf(SensisSurfaceHigh, SensisBg),
-                startY = top,
-                endY = top + side
-            )
-        )
-        drawPath(
-            path = body,
-            color = glow.copy(alpha = 0.85f),
+        // Simple white circular face, like the Grok bot mark.
+        drawCircle(color = Color.White, radius = side / 2f, center = center)
+        drawCircle(
+            color = glow.copy(alpha = 0.6f),
+            radius = side / 2f,
+            center = center,
             style = Stroke(width = 2.dp.toPx())
         )
-        drawPath(
-            path = body,
-            color = glow.copy(alpha = 0.12f),
-            style = Stroke(width = 8.dp.toPx())
-        )
 
-        // Eyes.
-        val eyeW = side * 0.13f
-        val eyeH = side * 0.20f * eyeOpen
-        val eyeY = top + side * 0.40f
-        val shiftX = tilt.x * side * 0.06f
-        val shiftY = tilt.y * side * 0.05f
-        val eyeXs = listOf(left + side * 0.34f, left + side * 0.66f)
-        eyeXs.forEach { ex ->
+        // Black eyes that track device tilt and blink.
+        val eyeW = side * 0.16f
+        val eyeH = side * 0.26f * eyeOpen
+        val eyeY = center.y
+        val shiftX = tilt.x * side * 0.05f
+        val shiftY = tilt.y * side * 0.04f
+        listOf(center.x - side * 0.16f, center.x + side * 0.16f).forEach { ex ->
             val cx = ex + shiftX
             val cy = eyeY + shiftY
-            val socket = Rect(cx - eyeW / 2f, cy - eyeH / 2f, cx + eyeW / 2f, cy + eyeH / 2f)
-
-            // Almond-ish rounded eye with soft glow.
-            drawOval(
-                color = glow.copy(alpha = 0.25f),
-                topLeft = Offset(socket.left - eyeW * 0.22f, socket.top - eyeH * 0.22f),
-                size = Size(socket.width + eyeW * 0.44f, socket.height + eyeH * 0.44f)
-            )
-            drawOval(color = Color(0xFF101216).copy(alpha = 0.92f), topLeft = socket.topLeft, size = socket.size)
-            drawOval(color = glow.copy(alpha = 0.5f), topLeft = socket.topLeft, size = socket.size, style = Stroke(1.4.dp.toPx()))
-
-            // Iris + pupil reacting to tilt.
-            val pupilR = eyeW * 0.34f
-            val irisR = eyeW * 0.52f
-            val irisCenter = Offset(cx, cy)
-            drawCircle(color = glow, radius = irisR, center = irisCenter)
-            drawCircle(color = Color.Black, radius = pupilR, center = irisCenter)
-            drawCircle(
-                color = Color.White.copy(alpha = 0.85f),
-                radius = pupilR * 0.35f,
-                center = Offset(irisCenter.x - pupilR * 0.3f, irisCenter.y - pupilR * 0.3f)
+            drawRoundRect(
+                color = Color(0xFF101014),
+                topLeft = Offset(cx - eyeW / 2f, cy - eyeH / 2f),
+                size = Size(eyeW, eyeH),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(eyeH / 2f)
             )
         }
     }
-}

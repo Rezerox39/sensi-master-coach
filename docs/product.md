@@ -31,11 +31,11 @@ Device -> Profile -> Generate -> Test -> Analyze -> Adjust -> Retest -> Save -> 
 
 ## New in this build
 
-- SENSIS-inspired matte black/red/gold theme.
+- Arise-inspired navy/blue-on-black theme with orange highlights.
 - Splash screen at startup.
-- Rebuilt setup wizard (welcome, device + DPI, play style, experience, control, summary).
+- Rebuilt setup wizard (welcome, goals, device + DPI, play style, experience, control, summary).
 - Real crosshair editor: live preview, presets, colors, export-to-clipboard, saved list (in-app only).
-- New mascot: one blob shape, no mouth, gyro-reactive eyes with blink.
+- Mascot: simple white circle, black gyro-reactive blinking eyes.
 
 ## UI/UX rebuild
 

@@ -16,13 +16,13 @@ The app does not modify, inject into, automate, or interfere with Free Fire or F
 
 ## MVP Status
 
-- SENSIS-inspired matte black/red/gold Compose theme.
+- Arise-inspired navy/blue-on-black Compose theme with orange highlights.
 - Splash screen at startup.
-- Multi-step setup wizard (device, DPI, play style, experience, control).
+- Multi-step setup wizard (goals, device, DPI, play style, experience, control).
 - Deterministic sensitivity generator and calibration loop.
 - Real crosshair editor: live preview, presets, colors, export, saved list (in-app only).
 - Profile export preview and improvement history.
-- Original blob mascot with no mouth and gyro-reactive blinking eyes.
+- Simple white-circle mascot with black gyro-reactive blinking eyes.
 - Offline-first; community, sync, and remote AI are post-MVP.
 ## CI Build
 

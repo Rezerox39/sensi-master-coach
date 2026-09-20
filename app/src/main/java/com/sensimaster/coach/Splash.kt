@@ -51,7 +51,7 @@ fun SplashScreen(onDone: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(SensisBg),
+            .background(AppBg),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -84,12 +84,12 @@ fun SplashScreen(onDone: () -> Unit) {
                     .height(4.dp)
                     .fillMaxWidth(0.16f + 0.20f * intro)
                     .align(Alignment.CenterHorizontally)
-                    .background(SensisAccent)
+                    .background(AppAccent)
             )
             Spacer(Modifier.height(10.dp))
             Text(
                 "Your Personal FF Sensi Coach",
-                color = SensisMuted,
+                color = AppMuted,
                 style = MaterialTheme.typography.bodyMedium
             )
         }
@@ -106,12 +106,12 @@ fun SplashScreen(onDone: () -> Unit) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(3.dp),
-                color = SensisAccent,
-                trackColor = SensisSurfaceHigh
+                color = AppAccent,
+                trackColor = AppSurfaceHigh
             )
             Text(
                 "Independent reference app. No game modification.",
-                color = SensisMuted,
+                color = AppMuted,
                 style = MaterialTheme.typography.labelSmall
             )
         }

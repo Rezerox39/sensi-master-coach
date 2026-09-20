@@ -24,29 +24,30 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
-// Sensis-style palette: matte black surfaces, gray panels, red accents, gold highlights.
-val SensisBg = Color(0xFF0D0D0D)
-val SensisSurface = Color(0xFF151515)
-val SensisSurfaceHigh = Color(0xFF1B1B1B)
-val SensisSurfaceLow = Color(0xFF141414)
-val SensisBorder = Color(0xFF2E2E2E)
-val SensisAccent = Color(0xFFFF1F1F)
-val SensisAccentDeep = Color(0xFFC60000)
-val SensisRedTint = Color(0xFF3E0E0E)
-val SensisGold = Color(0xFFFFD700)
-val SensisMuted = Color(0xFF9AA0AA)
+// Arise-inspired palette: deep near-black surfaces, navy-blue primary, electric-blue accents,
+// orange secondary highlights, and muted gray text on white.
+val AppBg = Color(0xFF0D0F12)
+val AppSurface = Color(0xFF181A1E)
+val AppSurfaceHigh = Color(0xFF20242B)
+val AppSurfaceLow = Color(0xFF14161A)
+val AppBorder = Color(0xFF2A2F37)
+val AppAccent = Color(0xFF3E9BFF)
+val AppPrimary = Color(0xFF005488)
+val AppPrimarySoft = Color(0x1F3E9BFF)
+val AppOrange = Color(0xFFFF9500)
+val AppMuted = Color(0xFF8E98A3)
 val SignalGreen = Color(0xFF69F0AE)
 val SignalAmber = Color(0xFFFFC857)
 
 @Composable
-fun SensisTheme(content: @Composable () -> Unit) {
+fun AppTheme(content: @Composable () -> Unit) {
     MaterialTheme(
         colorScheme = darkColorScheme(
-            background = SensisBg,
-            surface = SensisSurface,
-            surfaceVariant = SensisSurfaceLow,
-            primary = SensisAccent,
-            secondary = SensisGold,
+            background = AppBg,
+            surface = AppSurface,
+            surfaceVariant = AppSurfaceLow,
+            primary = AppAccent,
+            secondary = AppOrange,
             onBackground = Color.White,
             onSurface = Color.White,
             onPrimary = Color.White,
@@ -61,8 +62,8 @@ fun CardShell(modifier: Modifier = Modifier, content: @Composable ColumnScope.()
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(SensisSurface, RoundedCornerShape(18.dp))
-            .border(1.dp, SensisBorder, RoundedCornerShape(18.dp))
+            .background(AppSurface, RoundedCornerShape(18.dp))
+            .border(1.dp, AppBorder, RoundedCornerShape(18.dp))
             .padding(16.dp),
         content = content
     )
@@ -73,7 +74,7 @@ fun InfoCard(title: String, body: String) {
     CardShell {
         Text(title, color = Color.White, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(4.dp))
-        Text(body, color = SensisMuted)
+        Text(body, color = AppMuted)
     }
 }
 
@@ -82,7 +83,7 @@ fun PrimaryButton(label: String, modifier: Modifier = Modifier, onClick: () -> U
     Button(
         onClick = onClick,
         modifier = modifier,
-        colors = ButtonDefaults.buttonColors(containerColor = SensisAccentDeep, contentColor = Color.White),
+        colors = ButtonDefaults.buttonColors(containerColor = AppPrimary, contentColor = Color.White),
         shape = RoundedCornerShape(14.dp)
     ) {
         Text(label, fontWeight = FontWeight.Bold)
@@ -94,7 +95,7 @@ fun GhostButton(label: String, modifier: Modifier = Modifier, onClick: () -> Uni
     Button(
         onClick = onClick,
         modifier = modifier,
-        colors = ButtonDefaults.buttonColors(containerColor = SensisSurfaceHigh, contentColor = Color.White),
+        colors = ButtonDefaults.buttonColors(containerColor = AppSurfaceHigh, contentColor = Color.White),
         shape = RoundedCornerShape(14.dp)
     ) {
         Text(label)
@@ -113,12 +114,12 @@ fun <T> ChoiceRow(label: String, values: List<T>, selected: T, onSelect: (T) -> 
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .border(1.dp, if (active) SensisAccent else SensisBorder, RoundedCornerShape(12.dp))
-                            .background(if (active) SensisRedTint else SensisSurface, RoundedCornerShape(12.dp))
+                            .border(1.dp, if (active) AppAccent else AppBorder, RoundedCornerShape(12.dp))
+                            .background(if (active) AppPrimarySoft else AppSurface, RoundedCornerShape(12.dp))
                             .clickable { onSelect(item) }
                             .padding(12.dp)
                     ) {
-                        Text(text, color = if (active) Color.White else SensisMuted, fontWeight = if (active) FontWeight.Bold else FontWeight.Normal)
+                        Text(text, color = if (active) Color.White else AppMuted, fontWeight = if (active) FontWeight.Bold else FontWeight.Normal)
                     }
                 }
                 if (row.size == 1) Spacer(Modifier.weight(1f))
@@ -131,7 +132,7 @@ fun <T> ChoiceRow(label: String, values: List<T>, selected: T, onSelect: (T) -> 
 fun SectionLabel(label: String) {
     Text(
         label.uppercase(),
-        color = SensisAccent,
+        color = AppAccent,
         style = MaterialTheme.typography.labelMedium,
         fontWeight = FontWeight.Black
     )

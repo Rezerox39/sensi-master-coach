@@ -21,6 +21,14 @@ enum class ControlStyle(val label: String) {
     FourFinger("4-finger"),
 }
 
+enum class Motivation(val label: String) {
+    ImproveAim("Improve aim"),
+    RankPush("Rank push"),
+    RecoilControl("Recoil control"),
+    ClutchWins("Clutch wins"),
+    SmoothTracking("Smooth tracking"),
+}
+
 enum class ScopeType(val label: String) {
     General("General"),
     RedDot("Red Dot"),
@@ -86,6 +94,7 @@ data class PlayerProfile(
     val preferredWeapon: String,
     val current: SensitivitySet,
     val device: DeviceSnapshot,
+    val motivations: List<Motivation> = emptyList(),
 )
 
 data class ScopeRecommendation(
@@ -223,6 +232,7 @@ fun defaultProfile(device: DeviceSnapshot): PlayerProfile = PlayerProfile(
     experience = Experience.Intermediate,
     controlStyle = ControlStyle.ThreeFinger,
     preferredWeapon = "Balanced AR + SMG",
+    motivations = listOf(Motivation.ImproveAim, Motivation.SmoothTracking),
     current = SensitivitySet(
         general = 85,
         redDot = 80,

@@ -43,12 +43,12 @@ fun SectionHeader(title: String, trailing: String? = null) {
             modifier = Modifier
                 .width(4.dp)
                 .height(16.dp)
-                .background(SensisAccent, RoundedCornerShape(2.dp))
+                .background(AppAccent, RoundedCornerShape(2.dp))
         )
         Text(title.uppercase(), color = Color.White, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Black)
         Spacer(Modifier.weight(1f))
         if (trailing != null) {
-            Text(trailing, color = SensisMuted, style = MaterialTheme.typography.labelMedium)
+            Text(trailing, color = AppMuted, style = MaterialTheme.typography.labelMedium)
         }
     }
 }
@@ -57,18 +57,18 @@ fun SectionHeader(title: String, trailing: String? = null) {
 fun TagChip(
     text: String,
     active: Boolean = false,
-    tint: Color = SensisAccent,
+    tint: Color = AppAccent,
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
 ) {
     Box(
         modifier = modifier
-            .border(1.dp, if (active) tint else SensisBorder, RoundedCornerShape(20.dp))
-            .background(if (active) tint.copy(alpha = 0.16f) else SensisSurface, RoundedCornerShape(20.dp))
+            .border(1.dp, if (active) tint else AppBorder, RoundedCornerShape(20.dp))
+            .background(if (active) tint.copy(alpha = 0.16f) else AppSurface, RoundedCornerShape(20.dp))
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .padding(horizontal = 12.dp, vertical = 6.dp)
     ) {
-        Text(text, color = if (active) tint else SensisMuted, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+        Text(text, color = if (active) tint else AppMuted, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
     }
 }
 
@@ -76,12 +76,12 @@ fun TagChip(
 fun ValueChip(label: String, value: String, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .border(1.dp, SensisBorder, RoundedCornerShape(14.dp))
-            .background(SensisSurface, RoundedCornerShape(14.dp))
+            .border(1.dp, AppBorder, RoundedCornerShape(14.dp))
+            .background(AppSurface, RoundedCornerShape(14.dp))
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
-        Text(label, color = SensisMuted, style = MaterialTheme.typography.labelSmall)
+        Text(label, color = AppMuted, style = MaterialTheme.typography.labelSmall)
         Text(value, color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
     }
 }
@@ -97,14 +97,14 @@ fun <T> SegmentedControl(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(SensisSurfaceLow, RoundedCornerShape(14.dp))
+            .background(AppSurfaceLow, RoundedCornerShape(14.dp))
             .padding(4.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         options.forEach { option ->
             val active = option == selected
             val bg by animateColorAsState(
-                targetValue = if (active) SensisAccentDeep else Color.Transparent,
+                targetValue = if (active) AppPrimary else Color.Transparent,
                 label = "segment"
             )
             Box(
@@ -117,7 +117,7 @@ fun <T> SegmentedControl(
             ) {
                 Text(
                     labelOf(option),
-                    color = if (active) Color.White else SensisMuted,
+                    color = if (active) Color.White else AppMuted,
                     fontWeight = if (active) FontWeight.Bold else FontWeight.Normal,
                     style = MaterialTheme.typography.labelMedium
                 )
@@ -127,7 +127,7 @@ fun <T> SegmentedControl(
 }
 
 @Composable
-fun GaugeBar(value: Int, max: Int = 100, color: Color = SensisAccent, modifier: Modifier = Modifier) {
+fun GaugeBar(value: Int, max: Int = 100, color: Color = AppAccent, modifier: Modifier = Modifier) {
     val fraction by animateFloatAsState(
         targetValue = (value.toFloat() / max.toFloat()).coerceIn(0f, 1f),
         animationSpec = tween(600),
@@ -137,7 +137,7 @@ fun GaugeBar(value: Int, max: Int = 100, color: Color = SensisAccent, modifier: 
         modifier = modifier
             .fillMaxWidth()
             .height(6.dp)
-            .background(SensisSurfaceHigh, RoundedCornerShape(3.dp))
+            .background(AppSurfaceHigh, RoundedCornerShape(3.dp))
     ) {
         Box(
             modifier = Modifier
@@ -167,8 +167,8 @@ fun PressableCard(
                 scaleX = scale
                 scaleY = scale
             }
-            .background(SensisSurface, RoundedCornerShape(18.dp))
-            .border(1.dp, SensisBorder, RoundedCornerShape(18.dp))
+            .background(AppSurface, RoundedCornerShape(18.dp))
+            .border(1.dp, AppBorder, RoundedCornerShape(18.dp))
             .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
             .padding(16.dp),
         content = content
@@ -176,15 +176,15 @@ fun PressableCard(
 }
 
 @Composable
-fun StatBlock(label: String, value: String, modifier: Modifier = Modifier, accent: Color = SensisAccent) {
+fun StatBlock(label: String, value: String, modifier: Modifier = Modifier, accent: Color = AppAccent) {
     Column(
         modifier = modifier
-            .border(1.dp, SensisBorder, RoundedCornerShape(16.dp))
-            .background(SensisSurface, RoundedCornerShape(16.dp))
+            .border(1.dp, AppBorder, RoundedCornerShape(16.dp))
+            .background(AppSurface, RoundedCornerShape(16.dp))
             .padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
-        Text(label, color = SensisMuted, style = MaterialTheme.typography.labelSmall)
+        Text(label, color = AppMuted, style = MaterialTheme.typography.labelSmall)
         Text(value, color = accent, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
     }
 }

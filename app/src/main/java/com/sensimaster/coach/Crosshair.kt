@@ -47,8 +47,8 @@ fun CrosshairPreview(config: CrosshairConfig, modifier: Modifier = Modifier) {
         modifier = modifier
             .fillMaxWidth()
             .height(210.dp)
-            .background(SensisBg, RoundedCornerShape(16.dp))
-            .border(1.dp, SensisBorder, RoundedCornerShape(16.dp))
+            .background(AppBg, RoundedCornerShape(16.dp))
+            .border(1.dp, AppBorder, RoundedCornerShape(16.dp))
     ) {
         val c = center
         val dim = size.minDimension
@@ -159,7 +159,7 @@ fun CrosshairLab(
                     Box(
                         modifier = Modifier
                             .size(34.dp)
-                            .border(if (active) 3.dp else 1.dp, if (active) Color.White else SensisBorder, CircleShape)
+                            .border(if (active) 3.dp else 1.dp, if (active) Color.White else AppBorder, CircleShape)
                             .background(Color(color.argb.toInt()), CircleShape)
                             .clickable { onChange(config.copy(color = color)) }
                     )
@@ -200,7 +200,7 @@ fun CrosshairLab(
         SectionHeader("Saved crosshairs")
         if (saved.isEmpty()) {
             CardShell {
-                Text("Nothing saved yet. Save a preset to keep it next to your profiles.", color = SensisMuted)
+                Text("Nothing saved yet. Save a preset to keep it next to your profiles.", color = AppMuted)
             }
         } else {
             saved.forEachIndexed { index, savedConfig ->
@@ -208,7 +208,7 @@ fun CrosshairLab(
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                             Text(crosshairName(index), color = Color.White, fontWeight = FontWeight.Bold)
-                            Text("${savedConfig.shape.label} / ${savedConfig.color.label} / ${savedConfig.size}px", color = SensisMuted, style = MaterialTheme.typography.labelMedium)
+                            Text("${savedConfig.shape.label} / ${savedConfig.color.label} / ${savedConfig.size}px", color = AppMuted, style = MaterialTheme.typography.labelMedium)
                         }
                         GhostButton("Use") { onApplySaved(savedConfig) }
                         GhostButton("Del") { onDeleteSaved(index) }
@@ -224,7 +224,7 @@ private fun SliderRow(label: String, valueLabel: String, value: Float, range: Cl
     CardShell {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(label, color = Color.White, fontWeight = FontWeight.Bold)
-            Text(valueLabel, color = SensisAccent, fontWeight = FontWeight.Black, style = MaterialTheme.typography.titleMedium)
+            Text(valueLabel, color = AppAccent, fontWeight = FontWeight.Black, style = MaterialTheme.typography.titleMedium)
         }
         Spacer(Modifier.height(4.dp))
         Slider(value = value, onValueChange = onChange, valueRange = range, steps = steps)

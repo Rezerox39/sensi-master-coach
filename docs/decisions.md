@@ -10,3 +10,6 @@
 - In-app crosshair editor ships as a real tool in MVP; system overlay stays out of MVP.
 - Mascot is a single blob shape with no mouth; eyes react to device gyroscope and blink.
 - Keep every advertised feature honest reference material; never imply in-game automation.
+- Adopt Arise-inspired navigation shape: splash, motivation onboarding, dashboard with coach card, tab hub, profile/settings page.
+- Adopt Arise dark navy/blue + orange palette; keep the app free, offline, and ad-free.
+- Mascot is now a simple white circle with black eyes (Grok-style), gyro-reactive with blinking.

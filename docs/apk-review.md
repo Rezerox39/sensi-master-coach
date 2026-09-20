@@ -28,3 +28,28 @@ Mapped in `Theme.kt`: `SensisBg #0D0D0D`, `SensisSurface #151515`, `SensisSurfac
 
 - Overlay/floating crosshair, floating buttons, fake device/performance claims, paywalls, ads, game-file access.
 - Those stay out of the MVP per `AGENTS.md` and `docs/decisions.md`.
+
+## Arise 1.4.8 (`llc.sololeveling.Arise`)
+
+108 MB React Native/Expo companion app. The UI lives in the JS bundle (`assets/index.android.bundle`); only the native shell and theme resources are in the APK.
+
+### Theme
+
+- Near-black backgrounds: `#0d0f12` (dark), `#181a1e` (light/card), `#000000` activity background.
+- Navy-blue primary: `#005488` / `#023c69`; electric blue used for interactive accents; orange `#ff9500` for secondary highlights.
+- White headline text, muted gray body, minimal cards.
+
+### Screens / information architecture (from bundle strings + resources)
+
+- Splash -> onboarding with motivation/option choices -> bottom-tab hub.
+- Home (dashboard), Workout generator, Stats/Progress, Quest, AI Coach chat, Settings (sign out, restore purchases, delete account), Profile editing, paywall.
+
+### What we adopted
+
+- Same navigation shape: splash, goal-style onboarding steps, dashboard hub with coach card, tab bar, profile/settings page.
+- Navy/blue + orange palette mapped in `Theme.kt` (`AppBg #0D0F12`, `AppSurface #181A1E`, `AppPrimary #005488`, `AppAccent #3E9BFF`, `AppOrange #FF9500`).
+- Mascot changed to the user's requested simple white circle with black eyes (Grok-style), keeping gyro-reactive eyes and blinking.
+
+### What we did not adopt
+
+- Fitness/workout content, paywalls, subscriptions, analytics, tracking, or third-party SDKs. Domain stays manual Free Fire sensitivity coaching.
