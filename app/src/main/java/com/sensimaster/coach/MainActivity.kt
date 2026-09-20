@@ -6,22 +6,34 @@ import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.activity.SystemBarStyle
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.animateColorAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,17 +46,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 
-enum class Tab(val label: String) {
-    Home("Home"),
-    Sensi("Sensi"),
-    Calibrate("Calibrate"),
-    Crosshair("Crosshair"),
-    Profiles("Profiles"),
+enum class Tab(val label: String, val icon: TabIcon) {
+    Home("Home", TabIcon.Home),
+    Sensi("Sensi", TabIcon.Bolt),
+    Calibrate("Calibrate", TabIcon.Gauge),
+    Crosshair("Crosshair", TabIcon.Crosshair),
+    Profiles("Profiles", TabIcon.Profile),
 }
 
 data class UiState(
@@ -172,6 +185,10 @@ class SensiViewModel : ViewModel() {
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(0xFF0D0D0D.toInt()),
+            navigationBarStyle = SystemBarStyle.dark(0xFF0D0D0D.toInt())
+        )
         setContent { SensiMasterApp() }
     }
 }
@@ -205,57 +222,97 @@ private fun MainShell(vm: SensiViewModel) {
     val state = vm.state
     Scaffold(
         containerColor = SensisBg,
-        bottomBar = {
-            NavigationBar(containerColor = SensisSurfaceLow) {
-                Tab.entries.forEach { tab ->
-                    NavigationBarItem(
-                        selected = state.tab == tab,
-                        onClick = { vm.select(tab) },
-                        icon = { Text(tab.label.first().toString()) },
-                        label = { Text(tab.label, maxLines = 1, overflow = TextOverflow.Ellipsis) }
-                    )
-                }
-            }
-        }
+        bottomBar = { AppBottomBar(current = state.tab, onSelect = vm::select) }
     ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .background(SensisBg)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-            item {
-                Header("Sensi Master Coach", "Independent Free Fire companion")
-                CoachPanel(state.coach)
-            }
-            when (state.tab) {
-                Tab.Home -> item { HomeScreen(state) }
-                Tab.Sensi -> item { SensiScreen(state, vm::regenerate, vm::applyRecommendation) }
-                Tab.Calibrate -> item { CalibrationScreen(state, vm::calibrate) }
-                Tab.Crosshair -> item {
-                    CrosshairLab(
-                        config = state.crosshair,
-                        onChange = vm::updateCrosshair,
-                        saved = state.savedCrosshairs,
-                        onSave = vm::saveCrosshair,
-                        onApplySaved = vm::applySavedCrosshair,
-                        onDeleteSaved = vm::deleteSavedCrosshair
-                    )
+        Crossfade(targetState = state.tab, label = "tab") { tab ->
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .background(SensisBg)
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                contentPadding = PaddingValues(top = 20.dp, bottom = 28.dp)
+            ) {
+                item { AppHeader() }
+                item { CoachPanel(state.coach) }
+                when (tab) {
+                    Tab.Home -> item { HomeScreen(state) { vm.select(it) } }
+                    Tab.Sensi -> item { SensiScreen(state, vm::regenerate, vm::applyRecommendation) }
+                    Tab.Calibrate -> item { CalibrationScreen(state, vm::calibrate) }
+                    Tab.Crosshair -> item {
+                        CrosshairLab(
+                            config = state.crosshair,
+                            onChange = vm::updateCrosshair,
+                            saved = state.savedCrosshairs,
+                            onSave = vm::saveCrosshair,
+                            onApplySaved = vm::applySavedCrosshair,
+                            onDeleteSaved = vm::deleteSavedCrosshair
+                        )
+                    }
+                    Tab.Profiles -> item { ProfilesScreen(state) }
                 }
-                Tab.Profiles -> item { ProfilesScreen(state) }
             }
-            item { Spacer(Modifier.height(80.dp)) }
         }
     }
 }
 
 @Composable
-private fun Header(title: String, subtitle: String) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(title, color = Color.White, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
-        Text(subtitle, color = SensisMuted, style = MaterialTheme.typography.bodyMedium)
+private fun AppHeader() {
+    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+        Text(
+            "SENSI MASTER COACH",
+            color = Color.White,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Black
+        )
+        Text("Independent Free Fire companion", color = SensisMuted, style = MaterialTheme.typography.bodyMedium)
+    }
+}
+
+@Composable
+private fun AppBottomBar(current: Tab, onSelect: (Tab) -> Unit) {
+    Surface(color = SensisSurfaceLow) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .height(66.dp)
+        ) {
+            Tab.entries.forEach { tab ->
+                val selected = tab == current
+                val color by animateColorAsState(
+                    targetValue = if (selected) SensisAccent else SensisMuted,
+                    label = "tabTint"
+                )
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .clickable { onSelect(tab) },
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        if (selected) {
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .background(SensisRedTint, RoundedCornerShape(12.dp))
+                            )
+                        }
+                        AppIcon(tab.icon, Modifier.size(22.dp), tint = color)
+                    }
+                    Spacer(Modifier.height(3.dp))
+                    Text(
+                        tab.label,
+                        color = color,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -263,22 +320,74 @@ private fun Header(title: String, subtitle: String) {
 private fun CoachPanel(coach: CoachState) {
     CardShell {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-            MascotFace(coach.expression, modifier = Modifier.width(96.dp).height(96.dp))
+            MascotFace(coach.expression, modifier = Modifier.size(88.dp))
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text("Coach", color = SensisAccent, fontWeight = FontWeight.Bold)
-                Text(coach.message, color = Color.White)
+                Text(coach.message, color = Color.White, style = MaterialTheme.typography.bodyMedium)
             }
         }
     }
 }
 
 @Composable
-private fun HomeScreen(state: UiState) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        StatGrid(state)
-        InfoCard("Core loop", "Device -> Profile -> Generate -> Test -> Analyze -> Adjust -> Retest -> Save -> Improve")
-        InfoCard("DPI & refresh", "${state.profile.device.dpi} DPI | ~${state.profile.device.refreshRate} Hz on this profile.")
-        InfoCard("Safety", "All values are references you manually apply. This app does not modify Free Fire.")
+private fun HomeScreen(state: UiState, onNavigate: (Tab) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        SectionHeader("Quick actions")
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            QuickAction(icon = TabIcon.Bolt, title = "Generate setup", subtitle = "Sensi values", Modifier.weight(1f)) { onNavigate(Tab.Sensi) }
+            QuickAction(icon = TabIcon.Gauge, title = "Test & adjust", subtitle = "Calibration", Modifier.weight(1f)) { onNavigate(Tab.Calibrate) }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            QuickAction(icon = TabIcon.Crosshair, title = "Crosshair lab", subtitle = "Design & save", Modifier.weight(1f)) { onNavigate(Tab.Crosshair) }
+            QuickAction(icon = TabIcon.Profile, title = "Profiles", subtitle = "Export & history", Modifier.weight(1f)) { onNavigate(Tab.Profiles) }
+        }
+
+        SectionHeader("Your setup")
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
+            TagChip(state.profile.playStyle.label, active = true)
+            TagChip("${state.profile.experience.label}", active = true, tint = SensisGold)
+            TagChip("${state.profile.controlStyle.label}", active = true, tint = SensisMuted)
+            TagChip("${state.profile.device.dpi} DPI")
+            TagChip("~${state.profile.device.refreshRate} Hz")
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            StatBlock("General", state.profile.current.general.toString(), Modifier.weight(1f))
+            StatBlock("Red Dot", state.profile.current.redDot.toString(), Modifier.weight(1f))
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            StatBlock("4x", state.profile.current.fourX.toString(), Modifier.weight(1f))
+            StatBlock("Sniper", state.profile.current.sniper.toString(), Modifier.weight(1f))
+        }
+
+        SectionHeader("The loop")
+        InfoCard(
+            "Method",
+            "Device -> Profile -> Generate -> Test -> Analyze -> Adjust -> Retest -> Save -> Improve. One change at a time."
+        )
+        InfoCard(
+            "Safety",
+            "All values are references you apply manually. This app never modifies Free Fire."
+        )
+    }
+}
+
+@Composable
+private fun QuickAction(icon: TabIcon, title: String, subtitle: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    PressableCard(onClick = onClick, modifier = modifier) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Box(
+                modifier = Modifier
+                    .size(42.dp)
+                    .background(SensisRedTint, RoundedCornerShape(13.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                AppIcon(icon, Modifier.size(22.dp), tint = SensisAccent)
+            }
+            Column {
+                Text(title, color = Color.White, fontWeight = FontWeight.Bold)
+                Text(subtitle, color = SensisMuted, style = MaterialTheme.typography.labelMedium)
+            }
+        }
     }
 }
 
@@ -288,17 +397,45 @@ private fun SensiScreen(
     onRegenerate: () -> Unit,
     onApply: (ScopeRecommendation) -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        PrimaryButton("Generate Personalized Setup", onClick = onRegenerate, modifier = Modifier.fillMaxWidth())
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        SectionHeader("Sensi generator")
+        PressableCard(onClick = onRegenerate) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Box(
+                    modifier = Modifier
+                        .size(42.dp)
+                        .background(SensisRedTint, RoundedCornerShape(13.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    AppIcon(TabIcon.Bolt, Modifier.size(22.dp), tint = SensisAccent)
+                }
+                Column(Modifier.weight(1f)) {
+                    Text("Generate personalized setup", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text("Combines device, DPI, play style, and history", color = SensisMuted, style = MaterialTheme.typography.labelMedium)
+                }
+                Text("⟳", color = SensisAccent, fontWeight = FontWeight.Black)
+            }
+        }
+
         state.recommendations.forEach { item ->
             CardShell {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text(item.scope.label, color = Color.White, fontWeight = FontWeight.Bold)
-                        Text("${item.value}  |  range ${item.range.first}-${item.range.last}", color = SensisAccent)
-                        Text("${item.confidence}% confidence - ${item.direction}", color = SensisMuted)
-                        Text(item.explanation, color = SensisMuted)
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(item.scope.label, color = Color.White, fontWeight = FontWeight.Bold)
+                            TagChip(item.direction, active = true, tint = if (item.direction.startsWith("Increase")) SignalGreen else if (item.direction.startsWith("Decrease")) SignalAmber else SensisMuted)
+                        }
+                        Text(
+                            "${item.value}  ·  range ${item.range.first}-${item.range.last}",
+                            color = SensisAccent,
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Black
+                        )
+                        GaugeBar(item.confidence)
+                        Text("${item.confidence}% confidence", color = SensisMuted, style = MaterialTheme.typography.labelSmall)
+                        Text(item.explanation, color = SensisMuted, style = MaterialTheme.typography.bodySmall)
                     }
+                    Spacer(Modifier.width(10.dp))
                     GhostButton("Apply") { onApply(item) }
                 }
             }
@@ -309,15 +446,42 @@ private fun SensiScreen(
 @Composable
 private fun CalibrationScreen(state: UiState, onSignal: (ScopeType, CalibrationSignal) -> Unit) {
     var scope by remember { mutableStateOf(ScopeType.RedDot) }
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        ChoiceRow("Scope", ScopeType.entries, scope, { scope = it }, ScopeType::label)
-        val value = state.profile.current.valueFor(scope)
-        InfoCard("Current ${scope.label}", "$value. Run one test and choose the actual result.")
-        Slider(value = value.toFloat(), onValueChange = {}, valueRange = 0f..100f, enabled = false)
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        SectionHeader("Calibration")
+        Row(modifier = Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            ScopeType.entries.forEach { option ->
+                TagChip(
+                    option.label,
+                    active = option == scope,
+                    tint = if (option == scope) SensisAccent else SensisMuted,
+                    onClick = { scope = option }
+                )
+            }
+        }
+        CardShell {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Column {
+                    Text(scope.label, color = Color.White, fontWeight = FontWeight.Bold)
+                    Text("Current value", color = SensisMuted, style = MaterialTheme.typography.labelMedium)
+                }
+                Text(
+                    state.profile.current.valueFor(scope).toString(),
+                    color = SensisAccent,
+                    style = MaterialTheme.typography.displaySmall,
+                    fontWeight = FontWeight.Black,
+                    textAlign = TextAlign.End
+                )
+            }
+            Spacer(Modifier.height(12.dp))
+            GaugeBar(state.profile.current.valueFor(scope), color = SensisAccent)
+            Spacer(Modifier.height(6.dp))
+            Text("Run one test, then record what actually happened.", color = SensisMuted, style = MaterialTheme.typography.bodySmall)
+        }
+        SectionHeader("Result")
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             GhostButton("Overshoot", modifier = Modifier.weight(1f)) { onSignal(scope, CalibrationSignal.Overshoot) }
             GhostButton("Good", modifier = Modifier.weight(1f)) { onSignal(scope, CalibrationSignal.Good) }
-            GhostButton("Undershoot", modifier = Modifier.weight(1f)) { onSignal(scope, CalibrationSignal.Undershoot) }
+            GhostButton("Under", modifier = Modifier.weight(1f)) { onSignal(scope, CalibrationSignal.Undershoot) }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             GhostButton("Shaky", modifier = Modifier.weight(1f)) { onSignal(scope, CalibrationSignal.Shaky) }
@@ -329,37 +493,53 @@ private fun CalibrationScreen(state: UiState, onSignal: (ScopeType, CalibrationS
 
 @Composable
 private fun ProfilesScreen(state: UiState) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        SectionHeader("Active profile")
         CardShell {
-            Text(state.profile.name, color = Color.White, fontWeight = FontWeight.Bold)
-            Text("${state.profile.playStyle.label} / ${state.profile.experience.label} / ${state.profile.controlStyle.label}", color = SensisMuted)
-            Text("Weapon preference: ${state.profile.preferredWeapon}", color = SensisMuted)
-            Text("Device: ${state.profile.device.model} | ${state.profile.device.dpi} DPI | ~${state.profile.device.refreshRate} Hz", color = SensisMuted)
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .background(SensisRedTint, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        state.profile.name.take(1).uppercase(),
+                        color = SensisAccent,
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Black
+                    )
+                }
+                Column {
+                    Text(state.profile.name, color = Color.White, fontWeight = FontWeight.Black, style = MaterialTheme.typography.titleLarge)
+                    Text("${state.profile.playStyle.label} / ${state.profile.controlStyle.label} / ${state.profile.preferredWeapon}", color = SensisMuted, style = MaterialTheme.typography.labelMedium)
+                }
+            }
+            Spacer(Modifier.height(14.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
+                TagChip("${state.profile.device.model}", active = true)
+                TagChip("${state.profile.device.dpi} DPI", active = true, tint = SensisGold)
+                TagChip("~${state.profile.device.refreshRate} Hz", active = true, tint = SensisMuted)
+            }
+        }
+        SectionHeader("Values")
+        CardShell {
+            ScopeType.entries.forEach { scope ->
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(scope.label, color = SensisMuted)
+                    Text(
+                        state.profile.current.valueFor(scope).toString(),
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
         }
         ExportPreview(state.profile)
         HistoryList(state.history)
-    }
-}
-
-@Composable
-private fun StatGrid(state: UiState) {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Metric("General", state.profile.current.general.toString(), Modifier.weight(1f))
-            Metric("Red Dot", state.profile.current.redDot.toString(), Modifier.weight(1f))
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Metric("4x", state.profile.current.fourX.toString(), Modifier.weight(1f))
-            Metric("Sniper", state.profile.current.sniper.toString(), Modifier.weight(1f))
-        }
-    }
-}
-
-@Composable
-private fun Metric(label: String, value: String, modifier: Modifier = Modifier) {
-    CardShell(modifier) {
-        Text(label, color = SensisMuted)
-        Text(value, color = SensisAccent, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
     }
 }
 
@@ -379,20 +559,46 @@ private fun ExportPreview(profile: PlayerProfile) {
         }
     """.trimIndent()
     CardShell {
-        Text("Safe Export Preview", color = Color.White, fontWeight = FontWeight.Bold)
-        Text(export, color = SensisMuted)
+        SectionHeader("Export preview")
+        Spacer(Modifier.height(8.dp))
+        Text(export, color = SensisMuted, style = MaterialTheme.typography.bodySmall)
+        Spacer(Modifier.height(6.dp))
+        Text("Copy into your own notes or sync later.", color = SensisMuted, style = MaterialTheme.typography.labelSmall)
     }
 }
 
 @Composable
 private fun HistoryList(history: List<String>) {
+    SectionHeader("Improvement history")
     CardShell {
-        Text("Improvement History", color = Color.White, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(6.dp))
         if (history.isEmpty()) {
             Text("No calibration changes yet.", color = SensisMuted)
         } else {
-            history.takeLast(6).forEach { Text("- $it", color = SensisMuted) }
+            history.takeLast(6).forEachIndexed { index, message ->
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .padding(top = 6.dp)
+                            .background(SensisAccent, CircleShape)
+                    )
+                    Column {
+                        Text(message, color = SensisMuted, style = MaterialTheme.typography.bodySmall)
+                        if (index < history.takeLast(6).lastIndex) {
+                            Spacer(Modifier.height(8.dp))
+                        }
+                    }
+                }
+            }
         }
+    }
+}
+
+@Composable
+private fun InfoCard(title: String, body: String) {
+    CardShell {
+        Text(title, color = Color.White, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(4.dp))
+        Text(body, color = SensisMuted)
     }
 }

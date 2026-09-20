@@ -30,9 +30,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
@@ -44,26 +46,21 @@ fun CrosshairPreview(config: CrosshairConfig, modifier: Modifier = Modifier) {
     Canvas(
         modifier = modifier
             .fillMaxWidth()
-            .height(200.dp)
-            .background(SensisBg, RoundedCornerShape(14.dp))
-            .border(1.dp, SensisBorder, RoundedCornerShape(14.dp))
+            .height(210.dp)
+            .background(SensisBg, RoundedCornerShape(16.dp))
+            .border(1.dp, SensisBorder, RoundedCornerShape(16.dp))
     ) {
         val c = center
         val dim = size.minDimension
+        val cell = dim / 5f
 
-        // Faint alignment guides.
-        drawLine(
-            color = Color.White.copy(alpha = 0.06f),
-            start = Offset(c.x, 0f),
-            end = Offset(c.x, size.height),
-            strokeWidth = 1.dp.toPx()
-        )
-        drawLine(
-            color = Color.White.copy(alpha = 0.06f),
-            start = Offset(0f, c.y),
-            end = Offset(size.width, c.y),
-            strokeWidth = 1.dp.toPx()
-        )
+        // Stage grid.
+        for (i in 1..4) {
+            val alpha = 0.045f
+            drawLine(Color.White.copy(alpha = alpha), Offset(c.x - cell * i, c.y), Offset(c.x + cell * i, c.y), strokeWidth = 1.dp.toPx())
+            drawLine(Color.White.copy(alpha = alpha), Offset(c.x, c.y - cell * i), Offset(c.x, c.y + cell * i), strokeWidth = 1.dp.toPx())
+        }
+        drawCircle(Color.White.copy(alpha = 0.07f), radius = 2.2f * cell, center = c, style = Stroke(1.dp.toPx()))
 
         val color = Color(config.color.argb.toInt()).copy(alpha = config.opacity)
         val outline = if (config.outline) Color.Black.copy(alpha = config.opacity) else null
@@ -99,11 +96,7 @@ fun CrosshairPreview(config: CrosshairConfig, modifier: Modifier = Modifier) {
                 val inner = gapPx
                 val outer = sizePx
                 listOf(1f to 1f, 1f to -1f, -1f to 1f, -1f to -1f).forEach { (dx, dy) ->
-                    val sx = c.x + dx * inner * SQRT_HALF
-                    val sy = c.y + dy * inner * SQRT_HALF
-                    val ex = c.x + dx * outer * SQRT_HALF
-                    val ey = c.y + dy * outer * SQRT_HALF
-                    arm(Offset(sx, sy), Offset(ex, ey), thicknessPx, color)
+                    arm(Offset(c.x + dx * inner * SQRT_HALF, c.y + dy * inner * SQRT_HALF), Offset(c.x + dx * outer * SQRT_HALF, c.y + dy * outer * SQRT_HALF), thicknessPx, color)
                 }
                 if (config.centerDot) dot(c, dotR, color, outline)
             }
@@ -117,7 +110,7 @@ fun CrosshairPreview(config: CrosshairConfig, modifier: Modifier = Modifier) {
     }
 }
 
-private fun androidx.compose.ui.graphics.drawscope.DrawScope.dot(center: Offset, radius: Float, fill: Color, outline: Color?) {
+private fun DrawScope.dot(center: Offset, radius: Float, fill: Color, outline: Color?) {
     if (outline != null) {
         drawCircle(outline, radius = radius + 1.5.dp.toPx(), center = center)
     }
@@ -136,103 +129,88 @@ fun CrosshairLab(
     var copied by remember { mutableStateOf(false) }
     val clipboard = LocalClipboardManager.current
 
-    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        SectionLabel("Preview")
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        SectionHeader("Live stage")
         CrosshairPreview(config)
 
-        SectionLabel("Presets")
-        Row(
-            modifier = Modifier.horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
+        SectionHeader("Presets")
+        Row(modifier = Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             CrosshairPresets.series.forEachIndexed { index, preset ->
-                Chip(
-                    label = crosshairName(index),
+                TagChip(
+                    crosshairName(index),
                     active = config == preset,
                     onClick = { onChange(preset) }
                 )
             }
         }
 
-        SectionLabel("Shape")
-        Row(
-            modifier = Modifier.horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
+        SectionHeader("Shape")
+        Row(modifier = Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             CrosshairShape.entries.forEach { shape ->
-                Chip(label = shape.label, active = config.shape == shape) { onChange(config.copy(shape = shape)) }
+                TagChip(shape.label, active = config.shape == shape, onClick = { onChange(config.copy(shape = shape)) })
             }
         }
 
-        SectionLabel("Color")
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            CrosshairColor.entries.forEach { color ->
-                val active = config.color == color
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .border(if (active) 3.dp else 1.dp, if (active) Color.White else SensisBorder, CircleShape)
-                        .background(Color(color.argb.toInt()), CircleShape)
-                        .clickable { onChange(config.copy(color = color)) }
-                )
+        SectionHeader("Color")
+        CardShell {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                CrosshairColor.entries.forEach { color ->
+                    val active = config.color == color
+                    Box(
+                        modifier = Modifier
+                            .size(34.dp)
+                            .border(if (active) 3.dp else 1.dp, if (active) Color.White else SensisBorder, CircleShape)
+                            .background(Color(color.argb.toInt()), CircleShape)
+                            .clickable { onChange(config.copy(color = color)) }
+                    )
+                }
             }
         }
 
-        Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-            TogglePill("Center dot", config.centerDot, Modifier.weight(1f)) { onChange(config.copy(centerDot = it)) }
-            TogglePill("Outline", config.outline, Modifier.weight(1f)) { onChange(config.copy(outline = it)) }
+        SectionHeader("Toggles")
+        CardShell {
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                TagChip("Center dot: ${if (config.centerDot) "ON" else "OFF"}", active = config.centerDot, onClick = { onChange(config.copy(centerDot = !config.centerDot)) }, modifier = Modifier.weight(1f))
+                TagChip("Outline: ${if (config.outline) "ON" else "OFF"}", active = config.outline, onClick = { onChange(config.copy(outline = !config.outline)) }, modifier = Modifier.weight(1f))
+            }
         }
 
-        SliderRow("Size", "${config.size}px", config.size.toFloat(), 16f..120f, 103) {
-            onChange(config.copy(size = it.roundToInt()))
-        }
-        SliderRow("Thickness", "${config.thickness}px", config.thickness.toFloat(), 1f..12f, 10) {
-            onChange(config.copy(thickness = it.roundToInt()))
-        }
-        SliderRow("Gap", "${config.gap}px", config.gap.toFloat(), 0f..40f, 39) {
-            onChange(config.copy(gap = it.roundToInt()))
-        }
-        SliderRow("Opacity", "${(config.opacity * 100).roundToInt()}%", config.opacity, 0.2f..1f, 0) {
-            onChange(config.copy(opacity = it))
-        }
+        SectionHeader("Dimensions")
+        SliderRow("Size", "${config.size}px", config.size.toFloat(), 16f..120f, 103) { onChange(config.copy(size = it.roundToInt())) }
+        SliderRow("Thickness", "${config.thickness}px", config.thickness.toFloat(), 1f..12f, 10) { onChange(config.copy(thickness = it.roundToInt())) }
+        SliderRow("Gap", "${config.gap}px", config.gap.toFloat(), 0f..40f, 39) { onChange(config.copy(gap = it.roundToInt())) }
+        SliderRow("Opacity", "${(config.opacity * 100).roundToInt()}%", config.opacity, 0.2f..1f, 0) { onChange(config.copy(opacity = it)) }
         if (config.centerDot) {
-            SliderRow("Dot size", "${config.dotRadius}px", config.dotRadius.toFloat(), 2f..14f, 11) {
-                onChange(config.copy(dotRadius = it.roundToInt()))
-            }
+            SliderRow("Dot size", "${config.dotRadius}px", config.dotRadius.toFloat(), 2f..14f, 11) { onChange(config.copy(dotRadius = it.roundToInt())) }
         }
 
+        SectionHeader("Actions")
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            PrimaryButton("Save preset", onClick = onSave, modifier = Modifier.weight(1f))
-            GhostButton(
-                if (copied) "Copied" else "Export",
-                onClick = {
-                    clipboard.setText(androidx.compose.ui.text.AnnotatedString(crosshairDescription(config)))
-                    copied = true
-                },
-                modifier = Modifier.weight(1f)
-            )
+            PrimaryButton("Save preset", modifier = Modifier.weight(1f)) { onSave() }
+            GhostButton(if (copied) "Copied" else "Export", modifier = Modifier.weight(1f)) {
+                clipboard.setText(AnnotatedString(crosshairDescription(config)))
+                copied = true
+            }
         }
         InfoCard(
             "In-app only",
             "This editor previews and exports a crosshair you apply manually. MVP does not draw over the game or anything else."
         )
 
-        SectionLabel("Saved crosshairs")
+        SectionHeader("Saved crosshairs")
         if (saved.isEmpty()) {
-            InfoCard("Nothing saved yet", "Save a preset to keep it next to your profiles.")
+            CardShell {
+                Text("Nothing saved yet. Save a preset to keep it next to your profiles.", color = SensisMuted)
+            }
         } else {
             saved.forEachIndexed { index, savedConfig ->
                 CardShell {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                             Text(crosshairName(index), color = Color.White, fontWeight = FontWeight.Bold)
-                            Text(
-                                "${savedConfig.shape.label} / ${savedConfig.color.label} / ${savedConfig.size}px",
-                                color = SensisMuted
-                            )
+                            Text("${savedConfig.shape.label} / ${savedConfig.color.label} / ${savedConfig.size}px", color = SensisMuted, style = MaterialTheme.typography.labelMedium)
                         }
                         GhostButton("Use") { onApplySaved(savedConfig) }
-                        Spacer(Modifier.width(8.dp))
                         GhostButton("Del") { onDeleteSaved(index) }
                     }
                 }
@@ -242,46 +220,13 @@ fun CrosshairLab(
 }
 
 @Composable
-private fun Chip(label: String, active: Boolean, onClick: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .border(1.dp, if (active) SensisAccent else SensisBorder, RoundedCornerShape(20.dp))
-            .background(if (active) SensisRedTint else SensisSurface, RoundedCornerShape(20.dp))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 8.dp)
-    ) {
-        Text(label, color = if (active) Color.White else SensisMuted, fontWeight = if (active) FontWeight.Bold else FontWeight.Normal)
-    }
-}
-
-@Composable
-private fun TogglePill(label: String, checked: Boolean, modifier: Modifier = Modifier, onToggle: (Boolean) -> Unit) {
-    Box(
-        modifier = modifier
-            .border(1.dp, if (checked) SensisAccent else SensisBorder, RoundedCornerShape(14.dp))
-            .background(if (checked) SensisRedTint else SensisSurface, RoundedCornerShape(14.dp))
-            .clickable { onToggle(!checked) }
-            .padding(12.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            "$label: ${if (checked) "ON" else "OFF"}",
-            color = if (checked) Color.White else SensisMuted,
-            fontWeight = FontWeight.Bold
-        )
-    }
-}
-
-@Composable
 private fun SliderRow(label: String, valueLabel: String, value: Float, range: ClosedFloatingPointRange<Float>, steps: Int, onChange: (Float) -> Unit) {
     CardShell {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(label, color = Color.White, fontWeight = FontWeight.Bold)
-            Text(valueLabel, color = SensisAccent, fontWeight = FontWeight.Black)
+            Text(valueLabel, color = SensisAccent, fontWeight = FontWeight.Black, style = MaterialTheme.typography.titleMedium)
         }
+        Spacer(Modifier.height(4.dp))
         Slider(value = value, onValueChange = onChange, valueRange = range, steps = steps)
     }
 }

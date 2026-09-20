@@ -36,3 +36,10 @@ Device -> Profile -> Generate -> Test -> Analyze -> Adjust -> Retest -> Save -> 
 - Rebuilt setup wizard (welcome, device + DPI, play style, experience, control, summary).
 - Real crosshair editor: live preview, presets, colors, export-to-clipboard, saved list (in-app only).
 - New mascot: one blob shape, no mouth, gyro-reactive eyes with blink.
+
+## UI/UX rebuild
+
+- Custom canvas line-icon bottom navigation with animated selection.
+- Design system components: section headers, chips, segmented control, animated gauges, pressable cards, stat blocks.
+- Dashboard home with quick actions and setup snapshot.
+- Crossfade tab transitions, edge-to-edge system bars, polished splash and setup wizard.

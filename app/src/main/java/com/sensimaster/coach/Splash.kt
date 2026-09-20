@@ -1,5 +1,7 @@
 package com.sensimaster.coach
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -23,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -31,6 +33,11 @@ import kotlinx.coroutines.delay
 @Composable
 fun SplashScreen(onDone: () -> Unit) {
     var progress by remember { mutableFloatStateOf(0f) }
+    val intro by animateFloatAsState(
+        targetValue = if (progress > 0f) 1f else 0f,
+        animationSpec = tween(450),
+        label = "splashIntro"
+    )
 
     LaunchedEffect(Unit) {
         val steps = 30
@@ -51,8 +58,19 @@ fun SplashScreen(onDone: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            MascotFace("idle", modifier = Modifier.size(210.dp))
-            Spacer(Modifier.height(26.dp))
+            Box(
+                modifier = Modifier
+                    .size(230.dp)
+                    .graphicsLayer {
+                        scaleX = 0.82f + 0.18f * intro
+                        scaleY = 0.82f + 0.18f * intro
+                        alpha = intro
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                MascotFace("idle", modifier = Modifier.fillMaxSize())
+            }
+            Spacer(Modifier.height(30.dp))
             Text(
                 "SENSI MASTER COACH",
                 color = Color.White,
@@ -60,11 +78,12 @@ fun SplashScreen(onDone: () -> Unit) {
                 fontWeight = FontWeight.Black,
                 textAlign = TextAlign.Center
             )
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(8.dp))
             Box(
                 modifier = Modifier
-                    .width(72.dp)
                     .height(4.dp)
+                    .fillMaxWidth(0.16f + 0.20f * intro)
+                    .align(Alignment.CenterHorizontally)
                     .background(SensisAccent)
             )
             Spacer(Modifier.height(10.dp))

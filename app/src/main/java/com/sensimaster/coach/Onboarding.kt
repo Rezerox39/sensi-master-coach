@@ -1,5 +1,7 @@
 package com.sensimaster.coach
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -58,12 +60,12 @@ fun SetupWizard(device: DeviceSnapshot, detectedRefresh: Int, onDone: (SetupResu
         ) {
             if (step == 0) {
                 Column(
-                    modifier = Modifier.fillMaxWidth().padding(top = 60.dp),
+                    modifier = Modifier.fillMaxWidth().padding(top = 48.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    MascotFace("thinking", modifier = Modifier.size(190.dp))
-                    Spacer(Modifier.height(18.dp))
+                    MascotFace("thinking", modifier = Modifier.size(200.dp))
+                    Spacer(Modifier.height(16.dp))
                     Text(
                         "Build your sensi setup",
                         color = Color.White,
@@ -72,29 +74,16 @@ fun SetupWizard(device: DeviceSnapshot, detectedRefresh: Int, onDone: (SetupResu
                         textAlign = TextAlign.Center
                     )
                     Text(
-                        "A few quick choices. No wrong answers - you tune everything later in calibration.",
+                        "A few quick choices - you tune everything later in calibration.",
                         color = SensisMuted,
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodyLarge,
                         textAlign = TextAlign.Center
                     )
-                    Spacer(Modifier.height(10.dp))
-                    PrimaryButton("Start Setup", onClick = { step = 1 }, modifier = Modifier.fillMaxWidth())
+                    Spacer(Modifier.height(12.dp))
+                    PrimaryButton("Start Setup", modifier = Modifier.fillMaxWidth()) { step = 1 }
                 }
             } else {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    SectionLabel("Step ${step} / $lastStep")
-                    Text("${(step * 100 / (lastStep + 1))}%", color = SensisMuted, style = MaterialTheme.typography.labelMedium)
-                }
-                LinearProgressIndicator(
-                    progress = { step / (lastStep + 1f) },
-                    modifier = Modifier.fillMaxWidth().height(4.dp),
-                    color = SensisAccent,
-                    trackColor = SensisSurfaceHigh
-                )
+                WizardProgress(step, lastStep)
                 when (step) {
                     1 -> DeviceAndDpiStep(device, detectedRefresh, dpi, { dpi = it })
                     2 -> ChoiceRow("Play style", PlayStyle.entries, playStyle, { playStyle = it }, PlayStyle::label)
@@ -105,22 +94,39 @@ fun SetupWizard(device: DeviceSnapshot, detectedRefresh: Int, onDone: (SetupResu
                 Spacer(Modifier.height(26.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     if (step > 1) {
-                        GhostButton("Back", onClick = { step-- }, modifier = Modifier.weight(1f))
+                        GhostButton("Back", modifier = Modifier.weight(1f)) { step-- }
                     }
                     if (step < lastStep) {
-                        PrimaryButton("Next", onClick = { step++ }, modifier = Modifier.weight(1f))
+                        PrimaryButton("Next", modifier = Modifier.weight(1f)) { step++ }
                     } else {
                         PrimaryButton(
                             "Create my setup",
-                            onClick = {
-                                onDone(SetupResult(playStyle, experience, controlStyle, dpi, detectedRefresh))
-                            },
                             modifier = Modifier.weight(1f)
-                        )
+                        ) {
+                            onDone(SetupResult(playStyle, experience, controlStyle, dpi, detectedRefresh))
+                        }
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun WizardProgress(step: Int, lastStep: Int) {
+    val fraction by animateFloatAsState(
+        targetValue = step / (lastStep + 1f),
+        animationSpec = tween(350),
+        label = "wizardProgress"
+    )
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        SectionHeader("Setup", trailing = "Step $step / $lastStep")
+        LinearProgressIndicator(
+            progress = { fraction },
+            modifier = Modifier.fillMaxWidth().height(5.dp),
+            color = SensisAccent,
+            trackColor = SensisSurfaceHigh
+        )
     }
 }
 
@@ -132,17 +138,20 @@ private fun DeviceAndDpiStep(
     onDpiChange: (Int) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        SectionLabel("Device")
+        SectionHeader("Device")
         CardShell {
-            Text("${device.manufacturer} ${device.model}", color = Color.White, fontWeight = FontWeight.Bold)
+            Text("${device.manufacturer} ${device.model}", color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
             Spacer(Modifier.height(4.dp))
-            Text("Android ${device.androidVersion}  |  ~${detectedRefresh}Hz display", color = SensisMuted)
+            Text("Android ${device.androidVersion}  |  ~$detectedRefresh Hz display", color = SensisMuted)
         }
-        SectionLabel("Screen DPI")
+        SectionHeader("Screen DPI")
         CardShell {
-            Text("Display density used by the game. Know your value before applying presets.", color = SensisMuted)
+            Text("The display density the game uses. Know your value before applying presets.", color = SensisMuted, style = MaterialTheme.typography.bodySmall)
             Spacer(Modifier.height(14.dp))
-            Text("$dpi DPI", color = SensisAccent, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text("DPI", color = Color.White, fontWeight = FontWeight.Bold)
+                Text("$dpi", color = SensisAccent, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
+            }
             Slider(
                 value = dpi.toFloat(),
                 onValueChange = { onDpiChange(it.roundToInt()) },
@@ -170,29 +179,25 @@ private fun SummaryStep(
     dpi: Int,
     refreshRate: Int,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        SectionLabel("Your setup")
-        CardShell {
-            SummaryRow("Play style", playStyle.label)
-            SummaryRow("Experience", experience.label)
-            SummaryRow("Control style", controlStyle.label)
-            SummaryRow("DPI", "$dpi")
-            SummaryRow("Refresh rate", "~$refreshRate Hz")
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        SectionHeader("Review your setup")
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            ValueChip("Style", playStyle.label, Modifier.weight(1f))
+            ValueChip("Fingers", controlStyle.label, Modifier.weight(1f))
         }
-        InfoCard(
-            "Starting point, not magic numbers",
-            "The generator turns these choices into testable values. Calibration tunes one value at a time."
-        )
-    }
-}
-
-@Composable
-private fun SummaryRow(label: String, value: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(label, color = SensisMuted)
-        Text(value, color = Color.White, fontWeight = FontWeight.Bold)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            ValueChip("Level", experience.label, Modifier.weight(1f))
+            ValueChip("Refresh", "~$refreshRate Hz", Modifier.weight(1f))
+        }
+        CardShell {
+            Text("DPI", color = SensisMuted, style = MaterialTheme.typography.labelMedium)
+            Text("$dpi", color = SensisAccent, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
+            Spacer(Modifier.height(6.dp))
+            Text(
+                "The generator turns these choices into testable starting values. Calibration tunes one value at a time.",
+                color = SensisMuted,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
     }
 }
