@@ -1,7 +1,9 @@
 package com.sensimaster.coach
 
+import android.content.Context
 import android.os.Build
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -177,7 +179,16 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun SensiMasterApp(vm: SensiViewModel = viewModel()) {
     val context = LocalContext.current
-    val detectedRefresh = remember { context.display?.refreshRate?.toInt() ?: 60 }
+    val detectedRefresh = remember {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            @Suppress("DEPRECATION")
+            context.display?.refreshRate?.toInt() ?: 60
+        } else {
+            @Suppress("DEPRECATION")
+            val wm = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+            wm.defaultDisplay.refreshRate.toInt().takeIf { it > 0 } ?: 60
+        }
+    }
     SensisTheme {
         Surface(color = SensisBg, modifier = Modifier.fillMaxSize()) {
             when {
