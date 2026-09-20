@@ -139,3 +139,4 @@ fun MascotFace(expression: String, modifier: Modifier = Modifier) {
             )
         }
     }
+}

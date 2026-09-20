@@ -94,7 +94,7 @@ fun SetupWizard(device: DeviceSnapshot, detectedRefresh: Int, onDone: (SetupResu
                     3 -> ChoiceRow("Play style", PlayStyle.entries, playStyle, { playStyle = it }, PlayStyle::label)
                     4 -> ChoiceRow("Experience", Experience.entries, experience, { experience = it }, Experience::label)
                     5 -> ChoiceRow("Control style", ControlStyle.entries, controlStyle, { controlStyle = it }, ControlStyle::label)
-                    6 -> SummaryStep(motivations, playStyle, experience, controlStyle, dpi, detectedRefresh)
+                    6 -> SummaryStep(motivations.toList(), playStyle, experience, controlStyle, dpi, detectedRefresh)
                 }
                 Spacer(Modifier.height(26.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -176,7 +176,6 @@ private fun DeviceAndDpiStep(
     }
 }
 
-@Composable
 @Composable
 private fun MotivationsStep(selected: Set<Motivation>, onToggle: (Motivation) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
