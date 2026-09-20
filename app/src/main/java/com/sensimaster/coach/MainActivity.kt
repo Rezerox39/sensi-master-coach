@@ -9,7 +9,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.SystemBarStyle
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.animateColorAsState
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -594,11 +594,3 @@ private fun HistoryList(history: List<String>) {
     }
 }
 
-@Composable
-private fun InfoCard(title: String, body: String) {
-    CardShell {
-        Text(title, color = Color.White, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(4.dp))
-        Text(body, color = SensisMuted)
-    }
-}
