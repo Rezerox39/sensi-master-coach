@@ -38,7 +38,7 @@ class CrosshairConfigTest {
         val text = crosshairDescription(CrosshairPresets.split)
         assertTrue(text.contains("Split"))
         assertTrue(text.contains("manual"))
-        assertTrue(text.contains("center dot"))
+        assertTrue(text.contains("Center dot"))
     }
 
     @Test
