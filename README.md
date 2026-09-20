@@ -23,3 +23,6 @@ The app does not modify, inject into, automate, or interfere with Free Fire or F
 - In-app crosshair preview.
 - Tool center, profile export preview, history, and safety copy.
 - Offline-first; community and remote AI are post-MVP.
+## CI Build
+
+`.github/workflows/build-apk.yml` builds on an amd64 GitHub runner: unit tests, lint, and `assembleDebug`, then uploads `app-debug.apk` as an artifact (`dist/app-debug-apk/` after `gh run download`).
