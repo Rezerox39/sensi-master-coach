@@ -78,7 +78,7 @@ fun InfoCard(title: String, body: String) {
 }
 
 @Composable
-fun PrimaryButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun PrimaryButton(label: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
     Button(
         onClick = onClick,
         modifier = modifier,
@@ -90,7 +90,7 @@ fun PrimaryButton(label: String, onClick: () -> Unit, modifier: Modifier = Modif
 }
 
 @Composable
-fun GhostButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun GhostButton(label: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
     Button(
         onClick = onClick,
         modifier = modifier,

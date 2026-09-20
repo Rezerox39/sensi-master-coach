@@ -1,5 +1,6 @@
 package com.sensimaster.coach
 
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -348,5 +349,39 @@ private fun Metric(label: String, value: String, modifier: Modifier = Modifier) 
     CardShell(modifier) {
         Text(label, color = SensisMuted)
         Text(value, color = SensisAccent, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
+    }
+}
+
+@Composable
+private fun ExportPreview(profile: PlayerProfile) {
+    val export = """
+        {
+          "name": "${profile.name}",
+          "general": ${profile.current.general},
+          "redDot": ${profile.current.redDot},
+          "twoX": ${profile.current.twoX},
+          "fourX": ${profile.current.fourX},
+          "sniper": ${profile.current.sniper},
+          "freeLook": ${profile.current.freeLook},
+          "dpi": ${profile.device.dpi},
+          "refreshRate": ${profile.device.refreshRate}
+        }
+    """.trimIndent()
+    CardShell {
+        Text("Safe Export Preview", color = Color.White, fontWeight = FontWeight.Bold)
+        Text(export, color = SensisMuted)
+    }
+}
+
+@Composable
+private fun HistoryList(history: List<String>) {
+    CardShell {
+        Text("Improvement History", color = Color.White, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(6.dp))
+        if (history.isEmpty()) {
+            Text("No calibration changes yet.", color = SensisMuted)
+        } else {
+            history.takeLast(6).forEach { Text("- $it", color = SensisMuted) }
+        }
     }
 }
