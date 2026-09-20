@@ -16,13 +16,14 @@ The app does not modify, inject into, automate, or interfere with Free Fire or F
 
 ## MVP Status
 
-- Compose AMOLED UI.
-- Onboarding and first profile.
-- Deterministic sensitivity generator.
-- Calibration adjustment loop.
-- In-app crosshair preview.
-- Tool center, profile export preview, history, and safety copy.
-- Offline-first; community and remote AI are post-MVP.
+- SENSIS-inspired matte black/red/gold Compose theme.
+- Splash screen at startup.
+- Multi-step setup wizard (device, DPI, play style, experience, control).
+- Deterministic sensitivity generator and calibration loop.
+- Real crosshair editor: live preview, presets, colors, export, saved list (in-app only).
+- Profile export preview and improvement history.
+- Original blob mascot with no mouth and gyro-reactive blinking eyes.
+- Offline-first; community, sync, and remote AI are post-MVP.
 ## CI Build
 
 `.github/workflows/build-apk.yml` builds on an amd64 GitHub runner: unit tests, lint, and `assembleDebug`, then uploads `app-debug.apk` as an artifact (`dist/app-debug-apk/` after `gh run download`).

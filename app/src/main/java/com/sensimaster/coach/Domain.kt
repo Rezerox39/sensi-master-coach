@@ -75,6 +75,7 @@ data class DeviceSnapshot(
     val refreshRate: Int,
     val width: Int,
     val height: Int,
+    val dpi: Int = 0,
 )
 
 data class PlayerProfile(
@@ -139,6 +140,13 @@ object RecommendationEngine {
             ControlStyle.ThreeFinger -> 0
             ControlStyle.FourFinger -> 2
         }
+        val dpi = when {
+            profile.device.dpi >= 500 -> -3
+            profile.device.dpi in 400..499 -> -1
+            profile.device.dpi in 300..399 -> 2
+            profile.device.dpi in 1..299 -> 3
+            else -> 0
+        }
         val scopeBase = when (scope) {
             ScopeType.General -> 88
             ScopeType.RedDot -> 82
@@ -147,7 +155,7 @@ object RecommendationEngine {
             ScopeType.Sniper -> 48
             ScopeType.FreeLook -> 70
         }
-        return (scopeBase + style + experience + refresh + control).coerceIn(20, 98)
+        return (scopeBase + style + experience + refresh + control + dpi).coerceIn(20, 98)
     }
 
     private fun historyOffset(history: List<CalibrationSignal>): Int {
@@ -225,3 +233,108 @@ fun defaultProfile(device: DeviceSnapshot): PlayerProfile = PlayerProfile(
     ),
     device = device
 )
+
+// Crosshair domain -----------------------------------------------------------
+
+enum class CrosshairShape(val label: String) {
+    Cross("Cross"),
+    Dot("Dot"),
+    Circle("Circle"),
+    Split("Split"),
+    TShape("T"),
+}
+
+enum class CrosshairColor(val label: String, val argb: Long) {
+    White("White", 0xFFFFFFFF),
+    Red("Red", 0xFFFF1F1F),
+    Green("Green", 0xFF69F0AE),
+    Cyan("Cyan", 0xFF00E5FF),
+    Yellow("Yellow", 0xFFFFD700),
+    Magenta("Magenta", 0xFFFF3D9A),
+}
+
+data class CrosshairConfig(
+    val shape: CrosshairShape = CrosshairShape.Cross,
+    val color: CrosshairColor = CrosshairColor.Red,
+    val size: Int = 56,
+    val thickness: Int = 4,
+    val gap: Int = 8,
+    val opacity: Float = 1f,
+    val centerDot: Boolean = true,
+    val dotRadius: Int = 5,
+    val outline: Boolean = true,
+) {
+    init {
+        require(size in 16..120) { "size out of range" }
+        require(thickness in 1..12) { "thickness out of range" }
+        require(gap in 0..40) { "gap out of range" }
+        require(opacity in 0.2f..1f) { "opacity out of range" }
+        require(dotRadius in 2..14) { "dotRadius out of range" }
+    }
+}
+
+object CrosshairPresets {
+    val cross = CrosshairConfig()
+    val dot = CrosshairConfig(
+        shape = CrosshairShape.Dot,
+        color = CrosshairColor.White,
+        size = 20,
+        thickness = 5,
+        gap = 0,
+        centerDot = true,
+        dotRadius = 7,
+        outline = true
+    )
+    val circle = CrosshairConfig(
+        shape = CrosshairShape.Circle,
+        color = CrosshairColor.Green,
+        size = 72,
+        thickness = 4,
+        gap = 0,
+        centerDot = true,
+        dotRadius = 4,
+        outline = true
+    )
+    val split = CrosshairConfig(
+        shape = CrosshairShape.Split,
+        color = CrosshairColor.Cyan,
+        size = 72,
+        thickness = 4,
+        gap = 10,
+        centerDot = true,
+        dotRadius = 4,
+        outline = true
+    )
+    val tShape = CrosshairConfig(
+        shape = CrosshairShape.TShape,
+        color = CrosshairColor.Yellow,
+        size = 64,
+        thickness = 4,
+        gap = 8,
+        centerDot = false,
+        dotRadius = 4,
+        outline = true
+    )
+
+    val series = listOf(cross, dot, circle, split, tShape)
+}
+
+fun crosshairName(index: Int): String = when (index) {
+    0 -> "Classic Red"
+    1 -> "Tiny Dot"
+    2 -> "Green Ring"
+    3 -> "Split Cyan"
+    4 -> "Gold T"
+    else -> "Saved $index"
+}
+
+fun crosshairDescription(config: CrosshairConfig): String = buildString {
+    appendLine("Crosshair preset")
+    appendLine("Shape: ${config.shape.label}")
+    appendLine("Color: ${config.color.label}")
+    appendLine("Size: ${config.size}px  Thickness: ${config.thickness}px  Gap: ${config.gap}px")
+    appendLine("Opacity: ${(config.opacity * 100).toInt()}%")
+    appendLine("Center dot: ${if (config.centerDot) "on (${config.dotRadius}px)" else "off"}")
+    appendLine("Outline: ${if (config.outline) "on" else "off"}")
+    appendLine("Apply manually in-game; this app does not overlay or modify the game.")
+}

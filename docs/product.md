@@ -28,3 +28,11 @@ Device -> Profile -> Generate -> Test -> Analyze -> Adjust -> Retest -> Save -> 
 - No aim automation, macros, scripts, injection, or anti-cheat bypass.
 - No fake FPS, ping, boost, or hardware claims.
 - No unsourced creator settings.
+
+## New in this build
+
+- SENSIS-inspired matte black/red/gold theme.
+- Splash screen at startup.
+- Rebuilt setup wizard (welcome, device + DPI, play style, experience, control, summary).
+- Real crosshair editor: live preview, presets, colors, export-to-clipboard, saved list (in-app only).
+- New mascot: one blob shape, no mouth, gyro-reactive eyes with blink.
